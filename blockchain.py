@@ -31,7 +31,7 @@ class Blockchain:
                 check_proof = True
             else:
                 new_proof += 1
-            return new_proof
+        return new_proof
     
     def hash(self, block):
         encoded_block = json.dumps(block, sort_keys = True).encode()
@@ -46,7 +46,7 @@ class Blockchain:
                 return False
             previous_proof = previous_block['proof']
             proof = block['proof']
-            hash_operation = hashlib.sha256(str(new_proof**2 - previous_proof**2).encode()).hexdigest()
+            hash_operation = hashlib.sha256(str(proof**2 - previous_proof**2).encode()).hexdigest()
             if hash_operation[:4] != '0000':
                 return False
             
