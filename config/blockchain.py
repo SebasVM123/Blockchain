@@ -10,16 +10,60 @@ from urllib.parse import urlparse
 class Blockchain:
     def __init__(self):
         self.chain = []
+        self.transactions = [] #Se agregan las transacciones
         self.create_block(proof = 1, previous_hash = '0')
+        self.nodes = set() #Se agregan los nodos como set ya que pueden estar dispersos en cualquier parte
+                           #Se usan en el protocolo de consenso (Todos los nodos aceptan y mantienen la misma cadena de bloques)
+        
+    def add_node(self, address):
+        """
+        Descripción: añade el nodo a nuestra red de nodos
+        """
+        parsed_url = urlparse(address) #Analiza el url
+        self.nodes.add(parsed_url.netloc)
+        
+    def replace_chain(self):
+        """
+        Descripción: se establece el protocolo de consenso donde se analizan las cadenas de la red y se escoge la más larga"""
+        network = self.nodes
+        longest_chain = None
+        max_length = len(self.chain)
+        
+        for node in network:
+            response = request.get(f'http://{node}/get_chain')
+            if response.status_code == 200:
+                length = response.json(['length'])
+                chain = response.json(['chain'])
+                
+                if length > max_length and self.is_chain_valid(chain):
+                    max_length = length
+                    longest_chain = chain
+            
+            if longest_chain:
+                self.chain = longest_chain
+                return True
+            return False
         
     def create_block(self, proof, previous_hash):
         block = {'index': len(self.chain) + 1, 
                  'timestamp': str(datetime.datetime.now),
                  'proof': proof,
-                 'previous_hash' : previous_hash }
+                 'previous_hash' : previous_hash, 
+                 'transactions': self.transactions}
         
+        self.transactions = []
         self.chain.append(block)
         return block
+    
+    def add_transactions(self, sender, receiver, amount):
+        """
+        Descripción: añade la transacción a la lista de transacciones
+        """
+        self.transactions.append({'sender': sender,
+                                  'receiver': receiver,
+                                  'amount': amount})
+        previous_block = self.get_previous_block()
+        return previous_block['index'] + 1
     
     def get_previous_block(self):
         return self.chain[-1]
