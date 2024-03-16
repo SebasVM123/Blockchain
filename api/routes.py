@@ -1,5 +1,5 @@
 from flask import Flask, jsonify
-from blockchain import Blockchain
+from config.blockchain import Blockchain
 
 app = Flask(__name__)
 blockchain = Blockchain()
@@ -38,5 +38,5 @@ def is_valid():
     return jsonify(response), 200
         
 #Corriendo el App
-app.run(host='0.0.0.0', port='5000')
+#app.run(host='0.0.0.0', port='5000')
 
