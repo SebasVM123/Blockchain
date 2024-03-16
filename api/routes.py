@@ -1,7 +1,7 @@
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request
 from config.blockchain import Blockchain
 from uuid import uuid4
-import requests
+
 
 app = Flask(__name__)
 
@@ -20,8 +20,8 @@ def mine_block():
     previous_proof = previous_block['proof']
     proof = blockchain.proof_of_work(previous_proof)
     previous_hash = blockchain.hash(previous_block)
+    blockchain.add_transactions(sender = node_address, receiver = 'Gerwin', amount = 1)
     block = blockchain.create_block(proof, previous_hash)
-    blockchain.add_trasactions(sender = node_address, receiver = 'Gerwin ', amount = 1)
     
     response = {"message": "Felicidades, minaste un bloque!",
                 'index': block['index'],
@@ -44,7 +44,7 @@ def get_chain():
 def is_valid():
     is_valid = blockchain.is_chain_valid(blockchain.chain)
     if is_valid:
-        response = {'message': 'La de bloques es valida'}
+        response = {'message': 'La cadena de bloques es valida'}
     else:
         response = {'message': 'Oh no... la cadena no es valida '}
     return jsonify(response), 200
@@ -53,7 +53,7 @@ def is_valid():
 def add_transaction():
     json = request.get_json()
     transaction_keys = ['sender', 'receiver', 'amount']
-    if not all (key in json for in transaction_keys):
+    if not all (key in json for key in transaction_keys):
         return "Faltan algunos elementos de la transacción", 400
     
     index = blockchain.add_transactions(json['sender'], json['receiver'], json['amount'])
@@ -63,7 +63,7 @@ def add_transaction():
 
 #Descentralizar el Blockchain
 
-app.route('/connect_node', methods = ['POST'])
+@app.route("/connect_node", methods = ['POST'])
 def connect_node():
     json = request.get_json()
     nodes = json.get('nodes')
@@ -71,7 +71,7 @@ def connect_node():
         return "No node", 401
     for node in nodes:
         blockchain.add_node(node)
-    response = {'message':'Todos los nodos están conectados, la red contiene los siguientes nodos',
+    response = {'message':'Todos los nodos están conectados, la red contiene los siguientes nodos: ',
                 'total_nodes': list(blockchain.nodes)}
     return jsonify(response), 201
 
@@ -80,7 +80,7 @@ def connect_node():
 def replace_chain():
     is_chain_replaced = blockchain.replace_chain()
     if is_chain_replaced:
-        response = {'message': 'Algunos nodos tenían cadenas diferentes, fueron reemplazada por la cadena más larga.',
+        response = {'message': 'Algunos nodos tenían cadenas diferentes, fueron reemplazadas por la cadena más larga.',
                     'new_chain': blockchain.chain}
     else:
         response = {'message': 'Todos los nodos ya tienen la cadena más larga',
