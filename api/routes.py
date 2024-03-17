@@ -1,6 +1,7 @@
 from flask import Flask, jsonify, request
 from config.blockchain import Blockchain
 from uuid import uuid4
+import socket
 
 
 app = Flask(__name__)
@@ -8,7 +9,7 @@ app = Flask(__name__)
 
 #Creamos una dirección para el Nodo en Puerto 5000
 node_address = str(uuid4()).replace('-', '') #crea una dirección única aleatoria
-
+local_address = socket.gethostbyname(socket.gethostname())
 
 #Creamos la blockchain
 blockchain = Blockchain()
@@ -20,7 +21,7 @@ def mine_block():
     previous_proof = previous_block['proof']
     proof = blockchain.proof_of_work(previous_proof)
     previous_hash = blockchain.hash(previous_block)
-    blockchain.add_transactions(sender = node_address, receiver = 'Gerwin', amount = 1)
+    blockchain.add_transactions(sender = node_address, receiver = local_address, amount = 10)
     block = blockchain.create_block(proof, previous_hash)
     
     response = {"message": "Felicidades, minaste un bloque!",
@@ -35,9 +36,9 @@ def mine_block():
 #Obteniendo Cadena Completa
 @app.route('/get_chain', methods=['GET'])
 def get_chain():
-    reponse = {'chain': blockchain.chain,
+    response = {'chain': blockchain.chain,
                'length': len(blockchain.chain)}
-    return jsonify(reponse), 200
+    return jsonify(response), 200
 
 #Obteniendo validez de cadena de bloques
 @app.route("/is_valid", methods=['GET'])
@@ -76,7 +77,7 @@ def connect_node():
     return jsonify(response), 201
 
 #Reemplazar cadenas por la más larga
-@app.route("/is_valid", methods=['GET'])
+@app.route("/replace_chain", methods=['GET'])
 def replace_chain():
     is_chain_replaced = blockchain.replace_chain()
     if is_chain_replaced:

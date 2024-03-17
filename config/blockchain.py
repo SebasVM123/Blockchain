@@ -14,6 +14,7 @@ class Blockchain:
         self.create_block(proof = 1, previous_hash = '0')
         self.nodes = set() #Se agregan los nodos como set ya que pueden estar dispersos en cualquier parte
                            #Se usan en el protocolo de consenso (Todos los nodos aceptan y mantienen la misma cadena de bloques)
+        self.wallet = 100 #Se agrega el wallet inicial
         
     def add_node(self, address):
         """
