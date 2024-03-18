@@ -3,7 +3,7 @@ import hashlib
 import json
 from flask import Flask, jsonify, request
 import requests
-from uuid import uuid4
+import uuid
 from urllib.parse import urlparse
 
 
@@ -14,8 +14,18 @@ class Blockchain:
         self.create_block(proof = 1, previous_hash = '0')
         self.nodes = set() #Se agregan los nodos como set ya que pueden estar dispersos en cualquier parte
                            #Se usan en el protocolo de consenso (Todos los nodos aceptan y mantienen la misma cadena de bloques)
-        self.wallet = 100 #Se agrega el wallet inicial
+        #self.wallet = 100 #Se agrega el wallet inicial
+        self.wallets = {}
         
+        self.my_wallet = self.generate_wallet()
+        self.wallets[self.my_wallet] = 100
+
+    # Método para generar una nueva dirección (wallet)
+    @staticmethod
+    def generate_wallet():
+        return str(uuid.uuid4())
+
+    
     def add_node(self, address):
         """
         Descripción: añade el nodo a nuestra red de nodos
@@ -74,6 +84,70 @@ class Blockchain:
         previous_block = self.get_previous_block()
         return previous_block['index'] + 1
     
+    # Método para enviar monedas de una dirección a otra
+    def send_coins(self, sender, receiver, amount):
+        if sender not in self.wallets or self.wallets[sender] < amount:
+            return {'error': 'Fondos insuficientes'}
+
+        self.wallets[sender] -= amount
+        if receiver not in self.wallets:
+            self.wallets[receiver] = amount
+        else:
+            self.wallets[receiver] += amount
+
+        transaction = {'sender': sender, 'receiver': receiver, 'amount': amount}
+        self.add_transactions(transaction)
+        Blockchain.broadcast_transaction(transaction)
+        return {'message': 'Transacción exitosa'}
+    
+    # Método para sincronizar el registro de saldos con otros nodos
+    def sync_wallets(self):
+        for node in self.nodes:
+            url = f'http://{node}/get_wallets'
+            try:
+                response = requests.get(url)
+                response.raise_for_status()
+                remote_wallets = response.json()['wallets']
+                self.wallets.update(remote_wallets)
+            except requests.exceptions.RequestException as e:
+                print(f"Error al sincronizar el registro de saldos con {node}: {e}")
+
+    # Actualizar el registro de saldos al agregar un nuevo bloque
+    def create_block(self, proof, previous_hash):
+        block = {
+            'index': len(self.chain) + 1,
+            'timestamp': str(datetime.datetime.now()),
+            'proof': proof,
+            'previous_hash': previous_hash,
+            'transactions': self.transactions
+        }
+
+        self.transactions = []
+        self.chain.append(block)
+        return block
+
+    # Método para actualizar el registro de saldos con las transacciones de un bloque
+    def update_wallets(self, transactions):
+        for transaction in transactions:
+            sender = transaction['sender']
+            receiver = transaction['receiver']
+            amount = transaction['amount']
+
+            if sender not in self.wallets:
+                self.wallets[sender] = 0
+            self.wallets[sender] -= amount
+
+            if receiver not in self.wallets:
+                self.wallets[receiver] = amount
+            else:
+                self.wallets[receiver] += amount
+    
+    # Método para verificar el saldo de una dirección
+    def get_balance(self, address):
+        if address not in self.wallets:
+            return {'error': 'Dirección no encontrada'}
+        return {'balance': self.wallets[address]}
+
     def get_previous_block(self):
         return self.chain[-1]
     
@@ -111,3 +185,12 @@ class Blockchain:
             block_index += 1
         return True
 
+    # Método para difundir la transacción a todos los nodos de la red
+    def broadcast_transaction(self, transaction):
+        for node in self.nodes:
+            url = f'http://{node}/add_transaction'
+            try:
+                response = requests.post(url, json=transaction)
+                response.raise_for_status()
+            except requests.exceptions.RequestException as e:
+                print(f"Error al difundir la transacción a {node}: {e}")

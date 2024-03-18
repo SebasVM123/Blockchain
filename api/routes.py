@@ -3,7 +3,7 @@ from config.blockchain import Blockchain
 from uuid import uuid4
 #import socket
 from flask_cors import CORS, cross_origin
-
+import requests
 app = Flask(__name__)
 
 CORS(app)
@@ -90,6 +90,40 @@ def replace_chain():
         response = {'message': 'Todos los nodos ya tienen la cadena más larga',
                     'actual_chain' : blockchain.chain}
     return jsonify(response), 200
+
+@cross_origin()
+@app.route('/broadcast_transaction', methods=['POST'])
+def broadcast_transaction_route():
+    transaction = request.get_json()
+    blockchain.broadcast_transaction(transaction)
+    return jsonify({'message': 'Transacción difundida correctamente'}), 201
+
+@cross_origin()
+@app.route('/get_wallets', methods=['GET'])
+def get_wallets():
+    return jsonify({'wallets': blockchain.wallets}), 200
+
+@cross_origin()
+@app.route('/generate_wallet', methods=['GET'])
+def generate_wallet_route():
+    wallet_address = blockchain.generate_wallet()
+    return jsonify({'wallet_address': wallet_address}), 200
+
+@cross_origin()
+@app.route('/get_balance/<address>', methods=['GET'])
+def get_balance_route(address):
+    balance = blockchain.get_balance(address)
+    return jsonify(balance), 200
+
+@cross_origin()
+@app.route('/send_coins', methods=['POST'])
+def send_coins_route():
+    data = request.get_json()
+    receiver = data['receiver']
+    amount = data['amount']
+
+    result = blockchain.send_coins(blockchain.my_wallet, receiver, amount)
+    return jsonify(result), 200
 
 #Corriendo el App
 #app.run(host='0.0.0.0', port='5000')
