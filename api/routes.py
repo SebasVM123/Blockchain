@@ -91,12 +91,12 @@ def replace_chain():
                     'actual_chain' : blockchain.chain}
     return jsonify(response), 200
 
-@cross_origin()
+'''@cross_origin()
 @app.route('/broadcast_transaction', methods=['POST'])
 def broadcast_transaction_route():
     transaction = request.get_json()
     blockchain.broadcast_transaction(transaction)
-    return jsonify({'message': 'Transacción difundida correctamente'}), 201
+    return jsonify({'message': 'Transacción difundida correctamente'}), 201'''
 
 @cross_origin()
 @app.route('/get_wallets', methods=['GET'])

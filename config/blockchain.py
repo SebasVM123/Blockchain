@@ -16,15 +16,13 @@ class Blockchain:
                            #Se usan en el protocolo de consenso (Todos los nodos aceptan y mantienen la misma cadena de bloques)
         #self.wallet = 100 #Se agrega el wallet inicial
         self.wallets = {}
-        
-        self.my_wallet = self.generate_wallet()
-        self.wallets[self.my_wallet] = 100
+
 
     # Método para generar una nueva dirección (wallet)
-    @staticmethod
-    def generate_wallet():
-        return str(uuid.uuid4())
-
+    def generate_wallet(self):
+        self.my_wallet = str(uuid.uuid4())
+        self.wallets[self.my_wallet] = 100
+        return self.my_wallet
     
     def add_node(self, address):
         """
@@ -64,6 +62,7 @@ class Blockchain:
         
         self.transactions = []
         self.chain.append(block)
+        self.update_wallets(block['transactions'])
         return block
     
     '''def send_coins(self, sender, receiver, amount):
@@ -96,8 +95,8 @@ class Blockchain:
             self.wallets[receiver] += amount
 
         transaction = {'sender': sender, 'receiver': receiver, 'amount': amount}
-        self.add_transactions(transaction)
-        Blockchain.broadcast_transaction(transaction)
+        self.add_transactions(transaction['sender'], transaction['receiver'], transaction['amount'])
+        self.broadcast_transaction(transaction)
         return {'message': 'Transacción exitosa'}
     
     # Método para sincronizar el registro de saldos con otros nodos
@@ -111,20 +110,6 @@ class Blockchain:
                 self.wallets.update(remote_wallets)
             except requests.exceptions.RequestException as e:
                 print(f"Error al sincronizar el registro de saldos con {node}: {e}")
-
-    # Actualizar el registro de saldos al agregar un nuevo bloque
-    def create_block(self, proof, previous_hash):
-        block = {
-            'index': len(self.chain) + 1,
-            'timestamp': str(datetime.datetime.now()),
-            'proof': proof,
-            'previous_hash': previous_hash,
-            'transactions': self.transactions
-        }
-
-        self.transactions = []
-        self.chain.append(block)
-        return block
 
     # Método para actualizar el registro de saldos con las transacciones de un bloque
     def update_wallets(self, transactions):
