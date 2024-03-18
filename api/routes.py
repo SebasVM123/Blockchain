@@ -1,15 +1,15 @@
 from flask import Flask, jsonify, request
 from config.blockchain import Blockchain
 from uuid import uuid4
-import socket
-
+#import socket
+from flask_cors import CORS, cross_origin
 
 app = Flask(__name__)
 
-
+CORS(app)
 #Creamos una dirección para el Nodo en Puerto 5000
 node_address = str(uuid4()).replace('-', '') #crea una dirección única aleatoria
-local_address = socket.gethostbyname(socket.gethostname())
+#local_address = socket.gethostbyname(socket.gethostname())
 
 #Creamos la blockchain
 blockchain = Blockchain()
@@ -21,7 +21,7 @@ def mine_block():
     previous_proof = previous_block['proof']
     proof = blockchain.proof_of_work(previous_proof)
     previous_hash = blockchain.hash(previous_block)
-    blockchain.add_transactions(sender = node_address, receiver = local_address, amount = 10)
+    #blockchain.add_transactions(sender = node_address, receiver = 'Gerwin', amount = 10)
     block = blockchain.create_block(proof, previous_hash)
     
     response = {"message": "Felicidades, minaste un bloque!",
@@ -34,6 +34,7 @@ def mine_block():
     return jsonify(response), 200
 
 #Obteniendo Cadena Completa
+@cross_origin()
 @app.route('/get_chain', methods=['GET'])
 def get_chain():
     response = {'chain': blockchain.chain,
@@ -41,6 +42,7 @@ def get_chain():
     return jsonify(response), 200
 
 #Obteniendo validez de cadena de bloques
+@cross_origin()
 @app.route("/is_valid", methods=['GET'])
 def is_valid():
     is_valid = blockchain.is_chain_valid(blockchain.chain)
@@ -63,7 +65,7 @@ def add_transaction():
     return jsonify(response), 201
 
 #Descentralizar el Blockchain
-
+@cross_origin()
 @app.route("/connect_node", methods = ['POST'])
 def connect_node():
     json = request.get_json()
@@ -77,6 +79,7 @@ def connect_node():
     return jsonify(response), 201
 
 #Reemplazar cadenas por la más larga
+@cross_origin()
 @app.route("/replace_chain", methods=['GET'])
 def replace_chain():
     is_chain_replaced = blockchain.replace_chain()
