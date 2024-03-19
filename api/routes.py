@@ -89,6 +89,7 @@ def replace_chain():
     else:
         response = {'message': 'Todos los nodos ya tienen la cadena más larga',
                     'actual_chain' : blockchain.chain}
+    blockchain.update_chain(blockchain.chain)
     return jsonify(response), 200
 
 '''@cross_origin()

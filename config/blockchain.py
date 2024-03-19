@@ -6,7 +6,6 @@ import requests
 import uuid
 from urllib.parse import urlparse
 
-
 class Blockchain:
     def __init__(self):
         self.chain = []
@@ -16,7 +15,6 @@ class Blockchain:
                            #Se usan en el protocolo de consenso (Todos los nodos aceptan y mantienen la misma cadena de bloques)
         #self.wallet = 100 #Se agrega el wallet inicial
         self.wallets = {}
-
 
     # Método para generar una nueva dirección (wallet)
     def generate_wallet(self):
@@ -52,7 +50,7 @@ class Blockchain:
                 self.chain = longest_chain
                 return True
             return False
-        
+
     def create_block(self, proof, previous_hash):
         block = {'index': len(self.chain) + 1, 
                  'timestamp': str(datetime.datetime.now()),
@@ -64,14 +62,6 @@ class Blockchain:
         self.chain.append(block)
         self.update_wallets(block['transactions'])
         return block
-    
-    '''def send_coins(self, sender, receiver, amount):
-        """
-        Descripción: envía monedas de un usuario a otro
-        """
-        self.wallet -= amount
-        self.add_transactions(sender, receiver, amount)
-        return self.wallet'''
     
     def add_transactions(self, sender, receiver, amount):
         """
@@ -88,11 +78,11 @@ class Blockchain:
         if sender not in self.wallets or self.wallets[sender] < amount:
             return {'error': 'Fondos insuficientes'}
 
-        self.wallets[sender] -= amount
+        '''self.wallets[sender] -= amount
         if receiver not in self.wallets:
             self.wallets[receiver] = amount
         else:
-            self.wallets[receiver] += amount
+            self.wallets[receiver] += amount'''
 
         transaction = {'sender': sender, 'receiver': receiver, 'amount': amount}
         self.add_transactions(transaction['sender'], transaction['receiver'], transaction['amount'])
@@ -119,14 +109,20 @@ class Blockchain:
             amount = transaction['amount']
 
             if sender not in self.wallets:
-                self.wallets[sender] = 0
+                self.wallets[sender] = 100
             self.wallets[sender] -= amount
 
             if receiver not in self.wallets:
                 self.wallets[receiver] = amount
             else:
                 self.wallets[receiver] += amount
-    
+
+    def update_chain(self, chain):
+        for wallet in self.wallets:
+            wallet = 100
+        for block in chain:
+            self.update_wallets(block['transactions'])
+
     # Método para verificar el saldo de una dirección
     def get_balance(self, address):
         if address not in self.wallets:
@@ -139,10 +135,8 @@ class Blockchain:
     def proof_of_work(self, previous_proof):
         new_proof = 1
         check_proof = False
-        
         while check_proof is False:
             hash_operation = hashlib.sha256(str(new_proof**2 - previous_proof**2).encode()).hexdigest()
-            
             if hash_operation[:4] == '0000':
                 check_proof = True
             else:
