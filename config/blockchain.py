@@ -11,13 +11,12 @@ class Blockchain:
     def __init__(self):
         self.chain = []
         self.transactions = [] #Se agregan las transacciones
+        self.wallets = {}
         self.create_block(proof = 1, previous_hash = '0')
         self.nodes = set() #Se agregan los nodos como set ya que pueden estar dispersos en cualquier parte
                            #Se usan en el protocolo de consenso (Todos los nodos aceptan y mantienen la misma cadena de bloques)
         #self.wallet = 100 #Se agrega el wallet inicial
-        self.wallets = {}
-
-
+        
     # Método para generar una nueva dirección (wallet)
     def generate_wallet(self):
         self.my_wallet = str(uuid.uuid4())
@@ -62,7 +61,10 @@ class Blockchain:
         
         self.transactions = []
         self.chain.append(block)
-        self.update_wallets(block['transactions'])
+        
+        #self.update_wallets(block['transactions'])
+        self.update_chain(self.chain)
+        
         return block
     
     '''def send_coins(self, sender, receiver, amount):
@@ -88,11 +90,11 @@ class Blockchain:
         if sender not in self.wallets or self.wallets[sender] < amount:
             return {'error': 'Fondos insuficientes'}
 
-        self.wallets[sender] -= amount
+        '''self.wallets[sender] -= amount
         if receiver not in self.wallets:
             self.wallets[receiver] = amount
         else:
-            self.wallets[receiver] += amount
+            self.wallets[receiver] += amount'''
 
         transaction = {'sender': sender, 'receiver': receiver, 'amount': amount}
         self.add_transactions(transaction['sender'], transaction['receiver'], transaction['amount'])
@@ -119,14 +121,20 @@ class Blockchain:
             amount = transaction['amount']
 
             if sender not in self.wallets:
-                self.wallets[sender] = 0
+                self.wallets[sender] = 100
             self.wallets[sender] -= amount
 
             if receiver not in self.wallets:
-                self.wallets[receiver] = amount
+                self.wallets[receiver] = 100+amount
             else:
                 self.wallets[receiver] += amount
     
+    def update_chain(self,chain):
+        for key in self.wallets.keys():
+            self.wallets[key] = 100
+
+        for block in chain:
+            self.update_wallets(block['transactions']) 
     # Método para verificar el saldo de una dirección
     def get_balance(self, address):
         if address not in self.wallets:
