@@ -10,12 +10,12 @@ class Blockchain:
     def __init__(self):
         self.chain = []
         self.transactions = [] #Se agregan las transacciones
+        self.wallets = {}
         self.create_block(proof = 1, previous_hash = '0')
         self.nodes = set() #Se agregan los nodos como set ya que pueden estar dispersos en cualquier parte
                            #Se usan en el protocolo de consenso (Todos los nodos aceptan y mantienen la misma cadena de bloques)
         #self.wallet = 100 #Se agrega el wallet inicial
-        self.wallets = {}
-
+        
     # Método para generar una nueva dirección (wallet)
     def generate_wallet(self):
         self.my_wallet = str(uuid.uuid4())
@@ -60,7 +60,8 @@ class Blockchain:
         
         self.transactions = []
         self.chain.append(block)
-        self.update_wallets(block['transactions'])
+        self.update_chain_wallet(self.chain)
+        #self.update_wallets(block['transactions'])
         return block
     
     def add_transactions(self, sender, receiver, amount):
@@ -90,7 +91,7 @@ class Blockchain:
         return {'message': 'Transacción exitosa'}
     
     # Método para sincronizar el registro de saldos con otros nodos
-    def sync_wallets(self):
+    '''def sync_wallets(self):
         for node in self.nodes:
             url = f'http://{node}/get_wallets'
             try:
@@ -99,7 +100,7 @@ class Blockchain:
                 remote_wallets = response.json()['wallets']
                 self.wallets.update(remote_wallets)
             except requests.exceptions.RequestException as e:
-                print(f"Error al sincronizar el registro de saldos con {node}: {e}")
+                print(f"Error al sincronizar el registro de saldos con {node}: {e}")'''
 
     # Método para actualizar el registro de saldos con las transacciones de un bloque
     def update_wallets(self, transactions):
@@ -113,13 +114,14 @@ class Blockchain:
             self.wallets[sender] -= amount
 
             if receiver not in self.wallets:
-                self.wallets[receiver] = amount
+                self.wallets[receiver] = 100 + amount
+                print(self.wallets[receiver])
             else:
                 self.wallets[receiver] += amount
 
-    def update_chain(self, chain):
-        for wallet in self.wallets:
-            wallet = 100
+    def update_chain_wallet(self, chain):
+        for key in self.wallets.keys():
+            self.wallets[key] = 100
         for block in chain:
             self.update_wallets(block['transactions'])
 
