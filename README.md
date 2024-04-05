@@ -60,7 +60,7 @@ Inicie el servidor ejecutando el archivo *path.py* desde su IDE o bien `python p
 ```
   Y retorna un mensaje de la transacción. Se debe proporcionar en receiver la dirección de una wallet válida.
 
-## Implementación
+## Implementación.
 Para la implementación de este blockchain hay dos cosas a considerar:
 * Protocolo de consenso: en este proyecto se utilizó el protocolo de consenso de la cadena más larga, que es el mismo que utiliza Bitcoin. Los nodos de la red consideran como la cadena válida a la cadena más larga porque es esta la que contiene mayor cantidad de bloques válidos y la reemplazan por su cadena al detectarla.
 * Prueba de trabajo: en una prueba de trabajo, los mineros intentan encontrar un número que combinado con algunos datos del bloque, retorne un hash con un patrón deseado (generalmente los primeros n ceros). Nuestra prueba de trabajo implementa una operación matemática relativamente sencilla que combina el número, llamado new_proof, con el proof del bloque anterior: `hash_operation = hashlib.sha256(str(new_proof**2 - previous_proof**2).encode()).hexdigest()`. Se busca un new_proof que elevado al cuadrado y restándole el cuadrado del anterior proof devuelva un hash cuyas primeras cuatro cifras sean 0.
